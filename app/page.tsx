@@ -22,7 +22,7 @@ export default function HomePage() {
   const [usage, setUsage] = useState<{ used: number; limit: number } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [showProfile, setShowProfile] = useState(false);
-  const gateResolverRef = useRef<((ok: boolean) => void) | null>(null);
+  const gateResolverRef = useRef<((personaOrNull: string | null) => void) | null>(null);
 
   useEffect(() => {
     setCards(loadCards());
@@ -34,7 +34,7 @@ export default function HomePage() {
   }, []);
 
   // 생성 직전 호출됨. 프로필 시트를 띄우고, 사용자가 저장/확인할 때까지 대기.
-  function gateProfile(): Promise<boolean> {
+  function gateProfile(): Promise<string | null> {
     return new Promise((resolve) => {
       gateResolverRef.current = resolve;
       setShowProfile(true);
@@ -45,26 +45,36 @@ export default function HomePage() {
     saveProfile(p);
     setProfile(p);
     setShowProfile(false);
-    gateResolverRef.current?.(true);
+    gateResolverRef.current?.(profileToPersona(p));
     gateResolverRef.current = null;
   }
 
   function handleProfileClose() {
     setShowProfile(false);
-    gateResolverRef.current?.(false);
+    gateResolverRef.current?.(null);
     gateResolverRef.current = null;
   }
 
   const persona = profile ? profileToPersona(profile) : "";
 
   function handleNewCard(card: DreamCardType, u?: { used: number; limit: number }) {
-    const next = saveCard(card);
-    setCards(next);
-    if (u) setUsage(u);
-    if (card.audio) {
-      playPrefetched(card.audio);
+    const playAudio = () => {
+      if (card.audio) playPrefetched(card.audio);
+      else speakKorean(`${card.theme}. ${card.interpretation}`);
+    };
+    const commit = () => {
+      const next = saveCard(card);
+      setCards(next);
+      if (u) setUsage(u);
+      playAudio();
+    };
+    if (card.backgroundImage) {
+      const img = new Image();
+      img.onload = commit;
+      img.onerror = commit;
+      img.src = card.backgroundImage;
     } else {
-      speakKorean(`${card.theme}. ${card.interpretation}`);
+      commit();
     }
   }
 

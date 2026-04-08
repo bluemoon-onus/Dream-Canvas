@@ -1,11 +1,11 @@
 import type { DreamCard } from "./types";
 
 const KEY = "dreamcanvas:cards:v1";
-const MAX_CARDS = 3;
+const MAX_CARDS = 2; // 현재 + 직전 1장
 
 function storage(): Storage | null {
   if (typeof window === "undefined") return null;
-  return window.sessionStorage;
+  return window.localStorage;
 }
 
 export function loadCards(): DreamCard[] {
@@ -21,6 +21,12 @@ export function loadCards(): DreamCard[] {
   }
 }
 
+function stripHeavy(card: DreamCard): DreamCard {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { backgroundImage, backgroundImage512, audio, ...rest } = card;
+  return rest as DreamCard;
+}
+
 export function saveCard(card: DreamCard): DreamCard[] {
   const s = storage();
   const cards = [card, ...loadCards()].slice(0, MAX_CARDS);
@@ -28,9 +34,12 @@ export function saveCard(card: DreamCard): DreamCard[] {
   try {
     s.setItem(KEY, JSON.stringify(cards));
   } catch {
-    const trimmed = cards.slice(0, Math.max(1, cards.length - 1));
-    s.setItem(KEY, JSON.stringify(trimmed));
-    return trimmed;
+    // 용량 초과: 무거운 필드 제거 후 재시도. 그래도 실패하면 조용히 무시.
+    try {
+      s.setItem(KEY, JSON.stringify(cards.map(stripHeavy)));
+    } catch (e) {
+      console.warn("[storage] 저장 실패, 메모리에만 유지:", e);
+    }
   }
   return cards;
 }

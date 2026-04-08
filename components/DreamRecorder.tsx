@@ -10,8 +10,8 @@ interface Props {
   onCard: (card: DreamCard, usage?: { used: number; limit: number }) => void;
   usage?: { used: number; limit: number } | null;
   persona?: string;
-  /** 생성 직전에 호출. false 반환 시 생성 중단 (프로필 시트 등) */
-  beforeGenerate?: () => Promise<boolean>;
+  /** 생성 직전에 호출. null 반환 시 생성 중단. 문자열 반환 시 그 값을 persona로 사용 */
+  beforeGenerate?: () => Promise<string | null>;
 }
 
 type Mode = "voice" | "text";
@@ -140,9 +140,11 @@ export function DreamRecorder({ onCard, usage, persona, beforeGenerate }: Props)
       return;
     }
     unlockAudio(); // 사용자 제스처 중에 오디오 정책 unlock
+    let effectivePersona = persona;
     if (beforeGenerate) {
-      const ok = await beforeGenerate();
-      if (!ok) return;
+      const result = await beforeGenerate();
+      if (result === null) return;
+      effectivePersona = result;
     }
     setPhase("generating");
     setError(null);
@@ -166,7 +168,7 @@ export function DreamRecorder({ onCard, usage, persona, beforeGenerate }: Props)
       const res = await fetch("/api/dream", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text, lang, persona }),
+        body: JSON.stringify({ text, lang, persona: effectivePersona }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "생성 실패");
@@ -297,7 +299,7 @@ export function DreamRecorder({ onCard, usage, persona, beforeGenerate }: Props)
               onClick={generateCard}
               className="flex flex-[2] items-center justify-center gap-1.5 rounded-full bg-accent py-3 text-sm font-medium text-white"
             >
-              <Check size={16} /> {t("proceed")}
+              <Check size={16} /> {t("createCard")}
             </button>
           </div>
         </div>

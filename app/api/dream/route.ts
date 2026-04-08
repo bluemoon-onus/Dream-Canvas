@@ -98,6 +98,18 @@ export async function POST(req: Request) {
     }
     if (image1024Result.status === "rejected") {
       console.error("[dream] 1024 이미지 실패:", image1024Result.reason);
+      const msg = String(image1024Result.reason?.message ?? image1024Result.reason ?? "");
+      if (/quota|rate.?limit|429|exceed/i.test(msg)) {
+        return NextResponse.json(
+          {
+            error:
+              lang === "en"
+                ? "Image generation quota reached. Please try again in a moment."
+                : "지금은 그림 생성량이 많아요. 잠시 후 다시 시도해주세요.",
+          },
+          { status: 429 },
+        );
+      }
     }
 
     const interpretation =
