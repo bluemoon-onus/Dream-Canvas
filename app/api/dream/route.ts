@@ -24,9 +24,14 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as { text?: string; lang?: Lang };
+    const body = (await req.json()) as {
+      text?: string;
+      lang?: Lang;
+      persona?: string;
+    };
     const text = (body.text ?? "").trim();
     const lang: Lang = body.lang === "en" ? "en" : "ko";
+    const persona = body.persona?.trim() || undefined;
     if (!text) {
       return NextResponse.json(
         {
@@ -66,6 +71,7 @@ export async function POST(req: Request) {
         interpretation: "",
         gradient: ["#0a0a1a", "#1f1b3a", "#5b4b8a"],
         size: 1024,
+        persona,
       }),
       55_000,
       "nano-banana-1024",

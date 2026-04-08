@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Volume2, Download } from "lucide-react";
+import { Volume2, Download, User } from "lucide-react";
 import { DreamRecorder } from "@/components/DreamRecorder";
 import { DreamCard } from "@/components/DreamCard";
 import { CardGallery } from "@/components/CardGallery";
@@ -9,6 +9,9 @@ import { loadCards, saveCard } from "@/lib/storage";
 import { speakKorean, playPrefetched } from "@/lib/tts";
 import { exportCardAsPng } from "@/lib/exportCard";
 import { useLanguage } from "@/components/LanguageProvider";
+import { ProfileSheet } from "@/components/ProfileSheet";
+import { loadProfile, saveProfile, profileToPersona } from "@/lib/profile";
+import type { UserProfile } from "@/lib/profile";
 import type { DreamCard as DreamCardType } from "@/lib/types";
 
 const DAILY_LIMIT = Number(process.env.NEXT_PUBLIC_DAILY_LIMIT_PER_IP ?? "2");
@@ -17,14 +20,27 @@ export default function HomePage() {
   const { lang, setLang, t } = useLanguage();
   const [cards, setCards] = useState<DreamCardType[]>([]);
   const [usage, setUsage] = useState<{ used: number; limit: number } | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     setCards(loadCards());
+    const p = loadProfile();
+    setProfile(p);
+    if (!p) setShowProfile(true); // 첫 방문 강제 입력
     fetch("/api/usage")
       .then((r) => r.json())
       .then((j) => setUsage({ used: j.used, limit: j.limit }))
       .catch(() => {});
   }, []);
+
+  function handleProfileSave(p: UserProfile) {
+    saveProfile(p);
+    setProfile(p);
+    setShowProfile(false);
+  }
+
+  const persona = profile ? profileToPersona(profile) : "";
 
   function handleNewCard(card: DreamCardType, u?: { used: number; limit: number }) {
     const next = saveCard(card);
@@ -67,7 +83,15 @@ export default function HomePage() {
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center px-6 py-10">
       <header className="mb-8 flex w-full items-start justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <div className="flex gap-1 rounded-full bg-bg-elev p-1">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowProfile(true)}
+            aria-label={t("profile")}
+            className="rounded-full bg-bg-elev p-2 text-text-muted hover:text-text-primary"
+          >
+            <User size={14} />
+          </button>
+          <div className="flex gap-1 rounded-full bg-bg-elev p-1">
           <button
             onClick={() => setLang("ko")}
             className={`rounded-full px-2.5 py-1 text-[11px] ${
@@ -84,10 +108,32 @@ export default function HomePage() {
           >
             English
           </button>
+          </div>
         </div>
       </header>
 
-      <DreamRecorder onCard={handleNewCard} usage={usage} />
+      <DreamRecorder onCard={handleNewCard} usage={usage} persona={persona} />
+
+      {!latest && (
+        <section className="mt-10 flex w-full flex-col items-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/sample-main.png"
+            alt="sample dream"
+            className="h-[560px] w-[400px] max-w-[92vw] rounded-3xl object-cover opacity-80 shadow-2xl shadow-black/50"
+          />
+          <p className="mt-3 text-[11px] text-text-muted">sample</p>
+        </section>
+      )}
+
+      {showProfile && (
+        <ProfileSheet
+          initial={profile}
+          onSave={handleProfileSave}
+          onClose={() => setShowProfile(false)}
+          canClose={!!profile}
+        />
+      )}
 
       {latest && (
         <section className="mt-10 flex w-full flex-col items-center">

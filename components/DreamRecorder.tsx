@@ -9,6 +9,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 interface Props {
   onCard: (card: DreamCard, usage?: { used: number; limit: number }) => void;
   usage?: { used: number; limit: number } | null;
+  persona?: string;
 }
 
 type Mode = "voice" | "text";
@@ -20,7 +21,7 @@ type Phase =
   | "generating"
   | "error";
 
-export function DreamRecorder({ onCard, usage }: Props) {
+export function DreamRecorder({ onCard, usage, persona }: Props) {
   const { lang, t } = useLanguage();
   const dailyLimit = usage?.limit ?? Number(process.env.NEXT_PUBLIC_DAILY_LIMIT_PER_IP ?? "2");
   const used = usage?.used ?? 0;
@@ -159,7 +160,7 @@ export function DreamRecorder({ onCard, usage }: Props) {
       const res = await fetch("/api/dream", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text, lang }),
+        body: JSON.stringify({ text, lang, persona }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "생성 실패");

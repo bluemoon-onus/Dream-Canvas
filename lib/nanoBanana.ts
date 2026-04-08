@@ -8,16 +8,21 @@ export async function generateDreamImage(params: {
   interpretation: string;
   gradient: string[];
   size?: 512 | 1024;
+  persona?: string;
 }): Promise<string | undefined> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return undefined;
+
+  const personaLine = params.persona
+    ? `\nIf a human dreamer appears in the scene, depict them as: ${params.persona}.`
+    : "";
 
   const prompt = `A whimsical storybook illustration depicting the actual scene from this dream, square 1:1 composition at 512x512 pixels.
 
 The dream: "${params.rawText}"
 
 Mood guidance: ${params.interpretation}
-Color palette hint (hex, optional): ${params.gradient.join(", ")}
+Color palette hint (hex, optional): ${params.gradient.join(", ")}${personaLine}
 
 Style: children's picture book, fairy tale illustration, soft watercolor and gouache, gentle hand-drawn lines, dreamy magical atmosphere, Studio Ghibli meets a bedtime storybook. Depict the literal scene, characters, and objects from the dream as the focal subject. Center the main subject so it survives a 5:7 vertical center-crop.
 
