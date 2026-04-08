@@ -10,6 +10,8 @@ interface Props {
   onCard: (card: DreamCard, usage?: { used: number; limit: number }) => void;
   usage?: { used: number; limit: number } | null;
   persona?: string;
+  /** 생성 직전에 호출. false 반환 시 생성 중단 (프로필 시트 등) */
+  beforeGenerate?: () => Promise<boolean>;
 }
 
 type Mode = "voice" | "text";
@@ -21,7 +23,7 @@ type Phase =
   | "generating"
   | "error";
 
-export function DreamRecorder({ onCard, usage, persona }: Props) {
+export function DreamRecorder({ onCard, usage, persona, beforeGenerate }: Props) {
   const { lang, t } = useLanguage();
   const dailyLimit = usage?.limit ?? Number(process.env.NEXT_PUBLIC_DAILY_LIMIT_PER_IP ?? "2");
   const used = usage?.used ?? 0;
@@ -138,6 +140,10 @@ export function DreamRecorder({ onCard, usage, persona }: Props) {
       return;
     }
     unlockAudio(); // 사용자 제스처 중에 오디오 정책 unlock
+    if (beforeGenerate) {
+      const ok = await beforeGenerate();
+      if (!ok) return;
+    }
     setPhase("generating");
     setError(null);
     setGenElapsed(0);

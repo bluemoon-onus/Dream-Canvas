@@ -47,6 +47,7 @@ const ko: Dict = {
   appearancePlaceholder: "예: 긴 머리, 안경, 마른 체형",
   fieldSelfInDream: "내가 꿈에 등장",
   save: "저장",
+  confirm: "확인",
   required: "필수",
 };
 
@@ -95,6 +96,7 @@ const en: Dict = {
   appearancePlaceholder: "e.g. long hair, glasses, slim",
   fieldSelfInDream: "I appear in my dreams",
   save: "Save",
+  confirm: "Confirm",
   required: "required",
 };
 

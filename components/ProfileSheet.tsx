@@ -10,13 +10,15 @@ interface Props {
   onSave: (p: UserProfile) => void;
   onClose?: () => void;
   canClose: boolean;
+  /** true면 저장 버튼을 "확인"으로 표시 (재확인 모드) */
+  reconfirm?: boolean;
 }
 
 const GENDERS: Gender[] = ["male", "female", "unspecified"];
 const AGES: AgeRange[] = ["teens", "20_30", "40_50", "60_plus"];
 const SKINS: SkinTone[] = ["light", "medium", "dark"];
 
-export function ProfileSheet({ initial, onSave, onClose, canClose }: Props) {
+export function ProfileSheet({ initial, onSave, onClose, canClose, reconfirm }: Props) {
   const { t } = useLanguage();
   const [gender, setGender] = useState<Gender>(initial?.gender ?? "unspecified");
   const [ageRange, setAgeRange] = useState<AgeRange>(initial?.ageRange ?? "20_30");
@@ -108,7 +110,7 @@ export function ProfileSheet({ initial, onSave, onClose, canClose }: Props) {
           onClick={submit}
           className="w-full rounded-full bg-accent py-3 text-sm font-medium text-white"
         >
-          {t("save")}
+          {reconfirm ? t("confirm") : t("save")}
         </button>
       </div>
     </div>

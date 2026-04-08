@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Volume2, Download, User } from "lucide-react";
 import { DreamRecorder } from "@/components/DreamRecorder";
 import { DreamCard } from "@/components/DreamCard";
@@ -22,22 +22,37 @@ export default function HomePage() {
   const [usage, setUsage] = useState<{ used: number; limit: number } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const gateResolverRef = useRef<((ok: boolean) => void) | null>(null);
 
   useEffect(() => {
     setCards(loadCards());
-    const p = loadProfile();
-    setProfile(p);
-    if (!p) setShowProfile(true); // 첫 방문 강제 입력
+    setProfile(loadProfile());
     fetch("/api/usage")
       .then((r) => r.json())
       .then((j) => setUsage({ used: j.used, limit: j.limit }))
       .catch(() => {});
   }, []);
 
+  // 생성 직전 호출됨. 프로필 시트를 띄우고, 사용자가 저장/확인할 때까지 대기.
+  function gateProfile(): Promise<boolean> {
+    return new Promise((resolve) => {
+      gateResolverRef.current = resolve;
+      setShowProfile(true);
+    });
+  }
+
   function handleProfileSave(p: UserProfile) {
     saveProfile(p);
     setProfile(p);
     setShowProfile(false);
+    gateResolverRef.current?.(true);
+    gateResolverRef.current = null;
+  }
+
+  function handleProfileClose() {
+    setShowProfile(false);
+    gateResolverRef.current?.(false);
+    gateResolverRef.current = null;
   }
 
   const persona = profile ? profileToPersona(profile) : "";
@@ -112,7 +127,12 @@ export default function HomePage() {
         </div>
       </header>
 
-      <DreamRecorder onCard={handleNewCard} usage={usage} persona={persona} />
+      <DreamRecorder
+        onCard={handleNewCard}
+        usage={usage}
+        persona={persona}
+        beforeGenerate={gateProfile}
+      />
 
       {!latest && (
         <section className="mt-10 flex w-full flex-col items-center">
@@ -130,8 +150,9 @@ export default function HomePage() {
         <ProfileSheet
           initial={profile}
           onSave={handleProfileSave}
-          onClose={() => setShowProfile(false)}
-          canClose={!!profile}
+          onClose={handleProfileClose}
+          canClose={true}
+          reconfirm={!!profile}
         />
       )}
 
