@@ -38,7 +38,7 @@ Strict rules: NO text, NO letters, NO watermark, NO photorealism, NO horror, NO 
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
+        generationConfig: { responseModalities: ["IMAGE"] },
       }),
     });
 

@@ -221,10 +221,16 @@ export function DreamRecorder({ onCard, usage, persona, beforeGenerate }: Props)
 
       {(phase === "idle" || phase === "error") && (
         <p className="mb-4 text-center text-[14px] text-text-muted">
-          {t("subtitle", { n: dailyLimit })}{" "}
-          <span className="text-text-primary">
-            ({used}/{dailyLimit})
-          </span>
+          {limitReached ? (
+            <span className="text-text-primary">{t("seeYouTomorrow")}</span>
+          ) : (
+            <>
+              {t("subtitle", { n: dailyLimit })}{" "}
+              <span className="text-text-primary">
+                ({used}/{dailyLimit})
+              </span>
+            </>
+          )}
         </p>
       )}
 
