@@ -14,8 +14,6 @@ import { loadProfile, saveProfile, profileToPersona } from "@/lib/profile";
 import type { UserProfile } from "@/lib/profile";
 import type { DreamCard as DreamCardType } from "@/lib/types";
 
-const DAILY_LIMIT = Number(process.env.NEXT_PUBLIC_DAILY_LIMIT_PER_IP ?? "2");
-
 export default function HomePage() {
   const { lang, setLang, t } = useLanguage();
   const [cards, setCards] = useState<DreamCardType[]>([]);

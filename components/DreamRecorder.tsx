@@ -25,7 +25,7 @@ type Phase =
 
 export function DreamRecorder({ onCard, usage, persona, beforeGenerate }: Props) {
   const { lang, t } = useLanguage();
-  const dailyLimit = usage?.limit ?? Number(process.env.NEXT_PUBLIC_DAILY_LIMIT_PER_IP ?? "2");
+  const dailyLimit = usage?.limit ?? 2;
   const used = usage?.used ?? 0;
   const limitReached = used >= dailyLimit;
   const [mode, setMode] = useState<Mode>("voice");
