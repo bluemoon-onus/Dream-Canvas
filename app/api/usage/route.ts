@@ -5,6 +5,6 @@ export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   const ip = getClientIp(req);
-  const { used, limit } = peek(ip);
+  const { used, limit } = await peek(ip);
   return NextResponse.json({ used, limit });
 }

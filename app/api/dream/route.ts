@@ -46,7 +46,7 @@ export async function POST(req: Request) {
 
     // IP 일일 제한
     const ip = getClientIp(req);
-    const limit = checkAndIncrement(ip);
+    const limit = await checkAndIncrement(ip);
     if (!limit.ok) {
       return NextResponse.json(
         {
